@@ -49,3 +49,7 @@ Handle Name: \Device\HarddiskVolume3\Windows\WinSxS\amd64_microsoft.windows.comm
 0:007> .unload
 Unloading C:\Users\tahai\Code\windbg-arsenal\handleex\handleex.dll extension DLL
 ```
+
+Following is a screenshot of the extension in action.
+
+![poc](poc.png)

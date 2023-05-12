@@ -7,7 +7,6 @@ class Handleex : public WinDBGExt {
 public:
     Handleex(IDebugClient* pDebugClient);
     void DumpObjectInfo(HANDLE const handle);
-
 };
 
 #endif

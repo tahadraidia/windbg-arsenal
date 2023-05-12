@@ -3,8 +3,8 @@
 Handleex::Handleex(IDebugClient* pDebugClient) : WinDBGExt(pDebugClient) { }
 
 void Handleex::DumpObjectInfo(HANDLE const handle) {
-    _NtDuplicateObject NtDuplicateObject = (_NtDuplicateObject)GetProcAddress(LoadLibrary("ntdll.dll"), "NtDuplicateObject");
-    _NtQueryObject NtQueryObject = (_NtQueryObject)GetProcAddress(LoadLibrary("ntdll.dll"), "NtQueryObject");
+    _NtDuplicateObject NtDuplicateObject = (_NtDuplicateObject)::GetProcAddress(::LoadLibrary("ntdll.dll"), "NtDuplicateObject");
+    _NtQueryObject NtQueryObject = (_NtQueryObject)::GetProcAddress(::LoadLibrary("ntdll.dll"), "NtQueryObject");
     UNICODE_STRING usObjectName = { 0 };
     ULONG ulSize = 0;
     NTSTATUS status = 0;
@@ -14,7 +14,7 @@ void Handleex::DumpObjectInfo(HANDLE const handle) {
     if(!NT_SUCCESS(NtDuplicateObject(
 	GetDebuggeeHandle(), // This handle has all what we need!
 	(void*) handle,
-	GetCurrentProcess(),
+	::GetCurrentProcess(),
 	&dupHandle,
 	0,
 	0,
@@ -28,7 +28,7 @@ void Handleex::DumpObjectInfo(HANDLE const handle) {
     status = NtQueryObject(dupHandle, ObjectTypeInformation, nullptr, 0, &ulSize);
 
     if (status == STATUS_INFO_LENGTH_MISMATCH) {
-	PVOID buffer = malloc(ulSize);
+	PVOID buffer = ::malloc(ulSize);
 	status = NtQueryObject(dupHandle, ObjectTypeInformation, buffer, ulSize, nullptr);
 	if (NT_SUCCESS(status)) 
 	{
@@ -38,7 +38,7 @@ void Handleex::DumpObjectInfo(HANDLE const handle) {
 
 	status = NtQueryObject(dupHandle, ObjectNameInformation, nullptr, 0, &ulSize);
 	if (status == STATUS_INFO_LENGTH_MISMATCH) {
-	    buffer = malloc(ulSize);
+	    buffer = ::malloc(ulSize);
 	    status = NtQueryObject(dupHandle, ObjectNameInformation, buffer, ulSize, nullptr);
 	    if (NT_SUCCESS(status)) 
 	    {
@@ -47,7 +47,7 @@ void Handleex::DumpObjectInfo(HANDLE const handle) {
 	    }
 	}
         // Free the buffer.
-        free(buffer);
+        ::free(buffer);
 	buffer = nullptr;
     }
 }

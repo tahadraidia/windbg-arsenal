@@ -15,11 +15,12 @@ handleex(IDebugClient* pDebugClient, PCSTR args) {
     HANDLE haimedHandle = (HANDLE)windbgExt.EvaluateArgAsINT64(args);
     std::vector<SYSTEM_HANDLE> handles = windbgExt.GetDebuggeeHandles();
 
-    for(size_t i = 0; i <= handles.size(); i++) {
-        if((HANDLE)handles[i].Handle == haimedHandle) {
-            HANDLE handle = (HANDLE)handles[i].Handle;
+    for(size_t i = 0; const auto& h : handles) {
+        if((HANDLE)h.Handle == haimedHandle) {
+            HANDLE handle = (HANDLE)h.Handle;
             windbgExt.DumpObjectInfo(handle);
         }
+	i++;
     }
 
     return S_OK;

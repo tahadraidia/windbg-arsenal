@@ -5,8 +5,6 @@ Handleex::Handleex(IDebugClient* pDebugClient) : WinDBGExt(pDebugClient) { }
 void Handleex::DumpObjectInfo(HANDLE const handle) {
     _NtDuplicateObject NtDuplicateObject = (_NtDuplicateObject)GetProcAddress(LoadLibrary("ntdll.dll"), "NtDuplicateObject");
     _NtQueryObject NtQueryObject = (_NtQueryObject)GetProcAddress(LoadLibrary("ntdll.dll"), "NtQueryObject");
-    POBJECT_TYPE_INFORMATION pObjectTypeInfo = { 0 };
-    PVOID pObjectNameInfo = { 0 };
     UNICODE_STRING usObjectName = { 0 };
     ULONG ulSize = 0;
     NTSTATUS status = 0;

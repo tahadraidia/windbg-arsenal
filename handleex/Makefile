@@ -1,5 +1,5 @@
 CC=cl.exe
-CFLAGS=/nologo /MT /LD /std:c++17 /EHsc
+CFLAGS=/nologo /MT /LD /std:c++17 /EHsc /W4
 WINDBGEXT_INCLUDES=/I ../windbgext
 WINDBGEXT_SOURCE=../windbgext/windbgext.cpp
 WINDBGEXT_FILENAME=handleex.dll

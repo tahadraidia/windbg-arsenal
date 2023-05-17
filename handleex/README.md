@@ -1,6 +1,6 @@
 # Handleex
 
-Handleex is a Windbg extension written in C++ that allows retrieval of the name of an object associated with a handle from userspace, a capability not offered by existing extensions such as `!handle`.
+HandleEx is a Windbg extension written in C++ that allows retrieval of the name of an object associated with a handle from userspace, a capability not offered by existing extensions such as `!handle`.
 
 # Compile
 

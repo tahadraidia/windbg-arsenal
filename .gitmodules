@@ -1,3 +1,0 @@
-[submodule "windbgext"]
-	path = windbgext
-	url = https://github.com/tahadraidia/windbgext

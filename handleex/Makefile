@@ -1,11 +1,17 @@
 CC=cl.exe
-CFLAGS=/nologo /MT /LD /std:c++20 /EHsc /W4
-WINDBGEXT_INCLUDES=/I ../windbgext
-WINDBGEXT_SOURCE=../windbgext/windbgext.cpp
-WINDBGEXT_FILENAME=handleex.dll
+CFLAGS=/nologo /MT /LD /std:c++23preview /EHsc /W4
+TARGET=handleex.dll
+SRC=handleex.cpp
+OBJ=$(SRC:.cpp=.obj)
 
-handleex.dll:
-	$(CC) ext.cpp handleex.cpp $(WINDBGEXT_SOURCE) $(WINDBGEXT_INCLUDES) $(CFLAGS) /Fe:$(WINDBGEXT_FILENAME)
+
+all: $(TARGET)
+
+$(TARGET): $(OBJ)
+	$(CC) $(SRC) $(CFLAGS) /Fe:$@
+
+.cpp.obj:
+	$(CC) $(CFLAGS) /c $< /Fo$@
 
 clean:
 	del *.dll

@@ -43,7 +43,7 @@ Copyright:
 #include "ntstuff.h"
 
 NTSTATUS
-DumpObjName(
+GetObjectName(
 	IN HANDLE hSource,
 	IN HANDLE hObject,
 	OUT PUNICODE_STRING* ppObjectName
@@ -144,6 +144,107 @@ cleanup:
 	return status;
 }
 
+NTSTATUS
+GetObjectType(
+	IN HANDLE hSource,
+	IN HANDLE hObject,
+	OUT PUNICODE_STRING* ppObjectType
+	)
+/*++
+
+Routine Description:
+
+	The function retrieves the type name of a object.
+
+Arguments:
+
+	hSource - HANDLE of debuggee process.
+	hObject - HANDLE of the object we want retrieve its name.
+	ppObjectType - if successfull will hold object name otherwise it will hold NULL.
+
+Return value:
+
+	STATUS_SUCCESS on success, otherwise the appropriate NTSTATUS error code.
+
+--*/
+{
+	if (!ppObjectType || !hSource || !hObject)
+		return STATUS_INVALID_PARAMETER;
+
+	*ppObjectType = nullptr;
+
+	NTSTATUS status{STATUS_SUCCESS};
+	HANDLE hDup{nullptr};
+	ULONG size{};
+	PVOID buffer{};
+
+	status = NtDuplicateObject(
+			hSource,
+			hObject,
+			::GetCurrentProcess(), // Dbgengine process.
+			&hDup,
+			0,
+			0,
+			DUPLICATE_SAME_ACCESS
+		);
+
+	if (!NT_SUCCESS(status))
+		return status;
+
+	status = NtQueryObject(hDup,
+			(OBJECT_INFORMATION_CLASS)ObjectTypeInformation,
+			nullptr,
+			0,
+			&size
+		);
+
+	if (status != STATUS_INFO_LENGTH_MISMATCH &&
+		status != STATUS_BUFFER_TOO_SMALL &&
+		status != STATUS_BUFFER_OVERFLOW
+		)
+	{
+		goto cleanup;
+	}
+
+	buffer = std::malloc(size);
+
+	if (!buffer)
+		goto cleanup;
+
+	status = NtQueryObject(
+			hDup,
+			(OBJECT_INFORMATION_CLASS)ObjectTypeInformation,
+			buffer,
+			size,
+			nullptr
+		);
+
+	if (NT_SUCCESS(status)) {
+		PNTSTUFF_OBJECT_TYPE_INFORMATION pObjInfo = (PNTSTUFF_OBJECT_TYPE_INFORMATION)buffer;
+
+		*ppObjectType = static_cast<PUNICODE_STRING>(malloc(sizeof(UNICODE_STRING)));
+
+		std::memcpy(*ppObjectType, &pObjInfo->Name, sizeof(UNICODE_STRING));
+
+		goto cleanup;
+	}
+
+cleanup:
+
+	if (hDup) {
+		NtClose(hDup);
+		hDup = nullptr;
+	}
+
+	if (buffer) {
+		free(buffer);
+		buffer = nullptr;
+	}
+
+	return status;
+}
+
+
 #define EXT_MAJOR_VER  1
 #define EXT_MINOR_VER  0
 
@@ -152,6 +253,7 @@ WDBG_CMD(handleex)
 	const auto pArgument = pExt->GetRawArgs();
 	const auto hSource = pExt->GetDebuggeeHandle();
 	PUNICODE_STRING pObjName{};
+	PUNICODE_STRING pObjType{};
 
 	if (!pArgument || !*pArgument) {
 		pExt->Err() << "no argument passed";
@@ -170,7 +272,7 @@ WDBG_CMD(handleex)
 		return E_FAIL;
 	}
 
-	auto status = DumpObjName(
+	auto status = GetObjectName(
 			(HANDLE)*hSource,
 			(HANDLE)*hObject,
 			&pObjName
@@ -181,7 +283,23 @@ WDBG_CMD(handleex)
 		return E_FAIL;
 	}
 
+	if (!NT_SUCCESS(status) || !pObjName) {
+		pExt->Err() << "Failed retrieving name object, NTSTATUS 0x " << std::hex << status;
+		return E_FAIL;
+	}
 
+	status = GetObjectType(
+			(HANDLE)*hSource,
+			(HANDLE)*hObject,
+			&pObjType
+			);
+
+	if (!NT_SUCCESS(status) || !pObjType) {
+		pExt->Err() << "Failed retrieving type name of the object, NTSTATUS 0x " << std::hex << status;
+		return E_FAIL;
+	}
+
+	// Object type should be always present, hence no need to check length check.
 	if (pObjName->Length) {
 
 		auto wideName = std::wstring(
@@ -191,7 +309,15 @@ WDBG_CMD(handleex)
 
 		auto objectName = std::string(wideName.begin(), wideName.end());
 
-		pExt->Out() << "Handle: " << std::hex << *hObject << "\nObject name: " << objectName;
+		auto wideType = std::wstring(
+					pObjType->Buffer,
+					pObjType->Length / sizeof(WCHAR)
+				);
+
+		auto objectType = std::string(wideType.begin(), wideType.end());
+
+
+		pExt->Out() << "Handle: " << std::hex << *hObject << "\nObject type: " << objectType << "\nObject name: " << objectName;
 	}
 
 	return S_OK;

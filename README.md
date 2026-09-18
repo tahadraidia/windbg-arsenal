@@ -2,5 +2,5 @@
 
 This repository contains a collection of Windbg extensions.
 
-- HandleEx is a native extension that dumps the object type and its associated file name within the userland space.
-- [rp4windbg](https://github.com/tahadraidia/rp4windbg) a port of RP++ to Windbg as a native extension.
+- [HandleEx](https://github.com/tahadraidia/windbg-arsenal/tree/main/handleex) dumps an object's type and associated file name from user mode, including FILE objects for which the native `!handle` command fails to resolve the file name.
+- [rp4windbg](https://github.com/tahadraidia/rp4windbg) WinDBG port of [0vercl0k's rp++](https://github.com/0vercl0k/rp) ROP gadget finder.
